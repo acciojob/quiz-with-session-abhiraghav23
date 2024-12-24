@@ -1,5 +1,3 @@
-//your JS code here.
-
 // Do not change code below this line
 // This code will just display the questions to the screen
 const questions = [
@@ -30,27 +28,84 @@ const questions = [
   },
 ];
 
-// Display the quiz questions and choices
+// Retrieve user's progress from sessionStorage
+let userAnswers = JSON.parse(sessionStorage.getItem('progress')) || [];
+
+// Function to render the questions and choices
 function renderQuestions() {
+  const questionsElement = document.getElementById("questions");
+  questionsElement.innerHTML = ''; // Clear any previous questions
+  
   for (let i = 0; i < questions.length; i++) {
     const question = questions[i];
     const questionElement = document.createElement("div");
+    
     const questionText = document.createTextNode(question.question);
     questionElement.appendChild(questionText);
+    
     for (let j = 0; j < question.choices.length; j++) {
       const choice = question.choices[j];
       const choiceElement = document.createElement("input");
       choiceElement.setAttribute("type", "radio");
       choiceElement.setAttribute("name", `question-${i}`);
       choiceElement.setAttribute("value", choice);
+      
+      // Pre-select the radio button if the user had selected this answer previously
       if (userAnswers[i] === choice) {
         choiceElement.setAttribute("checked", true);
       }
+
       const choiceText = document.createTextNode(choice);
       questionElement.appendChild(choiceElement);
       questionElement.appendChild(choiceText);
     }
+
     questionsElement.appendChild(questionElement);
   }
 }
+
+// Function to save user's progress to sessionStorage
+function saveProgress() {
+  for (let i = 0; i < questions.length; i++) {
+    const selectedOption = document.querySelector(`input[name="question-${i}"]:checked`);
+    if (selectedOption) {
+      userAnswers[i] = selectedOption.value;
+    } else {
+      userAnswers[i] = null; // If no option is selected
+    }
+  }
+  sessionStorage.setItem('progress', JSON.stringify(userAnswers));
+}
+
+// Function to calculate the user's score
+function calculateScore() {
+  let score = 0;
+  for (let i = 0; i < questions.length; i++) {
+    if (userAnswers[i] === questions[i].answer) {
+      score++;
+    }
+  }
+  return score;
+}
+
+// Function to handle the submission of the quiz
+function handleSubmit() {
+  saveProgress(); // Save user's progress
+
+  // Calculate score
+  const score = calculateScore();
+
+  // Store the score in localStorage
+  localStorage.setItem('score', score);
+
+  // Display the score on the page
+  const scoreElement = document.getElementById("score");
+  scoreElement.innerHTML = `Your score is ${score} out of 5.`;
+}
+
+// Event listener for the submit button
+document.getElementById("submit").addEventListener("click", handleSubmit);
+
+// Render the questions when the page is loaded
 renderQuestions();
+
